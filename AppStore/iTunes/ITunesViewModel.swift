@@ -19,15 +19,19 @@ class ITunesViewModel {
         let searchButtonClicked: ControlEvent<Void>
         //검색어
         let searchText: ControlProperty<String?>
+        //선택된 앱
+        let selectedApp: PublishSubject<ITunesResult>
     }
     
     struct Output {
         let result: PublishSubject<[ITunesResult]>
+        let selectedApp: PublishSubject<ITunesResult>
     }
     
     func transform(input: Input) -> Output {
         
         let iTunesList = PublishSubject<[ITunesResult]>()
+        let selectedApp = PublishSubject<ITunesResult>()
         
         input.searchButtonClicked
             .withLatestFrom(input.searchText.orEmpty)
@@ -48,7 +52,13 @@ class ITunesViewModel {
             })
             .disposed(by: disposeBag)
         
-        return Output(result: iTunesList)
+        input.selectedApp
+            .subscribe(with: self) { owner, value in
+                selectedApp.onNext(value)
+            }
+            .disposed(by: disposeBag)
+        
+        return Output(result: iTunesList, selectedApp: selectedApp)
     }
     
 }

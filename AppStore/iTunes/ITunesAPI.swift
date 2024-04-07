@@ -42,7 +42,7 @@ class ITunesAPI {
                 
                 if let data = data,
                    let appData = try? JSONDecoder().decode(ITunes.self, from: data) {
-                    print(appData)
+//                    print(appData)
                     observer.onNext(appData)
                 } else {
                     print("응답은 왔으나 디코딩 실패")

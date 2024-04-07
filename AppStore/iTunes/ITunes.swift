@@ -18,4 +18,7 @@ struct ITunesResult: Decodable {
     let genres: [String] //카테고리
     let artworkUrl512: String //앱 아이콘
     let screenshotUrls: [String] //스크린샷
+    let releaseNotes: String //업데이트 내역
+    let description: String //하단 설명
+    let version: String //버전 정보
 }

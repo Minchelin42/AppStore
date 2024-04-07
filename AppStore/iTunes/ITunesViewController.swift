@@ -11,7 +11,7 @@ import RxSwift
 import RxCocoa
 import Kingfisher
 
-class ITunesViewController: UIViewController {
+final class ITunesViewController: UIViewController {
 
     let tableView = UITableView()
     let searchBar = UISearchBar()
@@ -26,12 +26,11 @@ class ITunesViewController: UIViewController {
         bind()
     }
     
-    func configure() {
+    private func configure() {
         view.backgroundColor = .white
         
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .automatic
-        navigationController?.navigationBar.isUserInteractionEnabled = false
         navigationItem.rx.title.onNext("검색")
         
         view.addSubview(UIView(frame: .zero))
@@ -56,9 +55,11 @@ class ITunesViewController: UIViewController {
         }
     }
     
-    func bind() {
+    private func bind() {
         
-        let input = ITunesViewModel.Input(searchButtonClicked: searchBar.rx.searchButtonClicked, searchText: searchBar.rx.text)
+        let selectedApp = PublishSubject<ITunesResult>()
+        
+        let input = ITunesViewModel.Input(searchButtonClicked: searchBar.rx.searchButtonClicked, searchText: searchBar.rx.text, selectedApp: selectedApp)
         
         let output = viewModel.transform(input: input)
         
@@ -66,7 +67,8 @@ class ITunesViewController: UIViewController {
             .bind(to: tableView.rx.items(
                     cellIdentifier: ITunesTableViewCell.identifier,
                     cellType: ITunesTableViewCell.self)
-            ) { (row, element, cell) in
+            ) { [weak self] (row, element, cell) in
+                guard let self = self else { return }
                 cell.appName.text = element.trackName
                 cell.appIcon.kf.setImage(with: URL(string: element.artworkUrl512))
                 cell.scoreLabel.text = String(format: "%.1f", element.averageUserRating)
@@ -75,9 +77,35 @@ class ITunesViewController: UIViewController {
                 cell.preView1.kf.setImage(with: URL(string: element.screenshotUrls[0]))
                 cell.preView2.kf.setImage(with: URL(string: element.screenshotUrls[1]))
                 cell.preView3.kf.setImage(with: URL(string: element.screenshotUrls[2]))
+                
+                cell.downloadButton.rx.tap
+                    .subscribe(onNext: { _ in
+                        //Realm에 저장해야함
+                    })
+                    .disposed(by: cell.disposeBag)
+                
+                self.view.endEditing(true)
             }
             .disposed(by: disposeBag)
         
+        //이거 수정해야함^^
+        Observable.zip(
+            tableView.rx.modelSelected(ITunesResult.self),
+            tableView.rx.itemSelected
+        )
+        .map { $0.0 }
+            .subscribe(with: self) { owner, value in
+                selectedApp.onNext(value)
+            }
+            .disposed(by: disposeBag)
+        
+        output.selectedApp
+            .bind(with: self) { owner, value in
+                let vc = AppDetailViewController()
+                vc.selectedApp = value
+                owner.navigationController?.pushViewController(vc, animated: true)
+            }
+            .disposed(by: disposeBag)
         
     }
 
