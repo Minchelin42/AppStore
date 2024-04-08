@@ -17,11 +17,11 @@ enum APIError: Error {
 
 class ITunesAPI {
     
-    static func fetchITunesData(title: String) -> Observable<ITunes> {
-        return Observable<ITunes>.create { observer in
-
-            guard let url = URL(string: "https://itunes.apple.com/search?term=\(title)&country=kr&entity=software") else {
-                observer.onError(APIError.invalidURL)
+    static func fetchITunesData(title: String) -> Single<ITunes> {
+        return Single.create { single -> Disposable in
+            //네트워크 통신 실패를 위해서 일부러 url 수정해놓음
+            guard let url = URL(string: "https://111itunes.apple.com/search?term=\(title)&country=kr&entity=software") else {
+                single(.failure(APIError.invalidURL))
                 return Disposables.create()
             }
             
@@ -29,8 +29,9 @@ class ITunesAPI {
                 
                 print("DataTask Succeed")
                 
-                if let _ = error {
+                if let error = error {
                     print("Error")
+                    single(.failure(error))
                     return
                 }
                 
@@ -42,18 +43,15 @@ class ITunesAPI {
                 
                 if let data = data,
                    let appData = try? JSONDecoder().decode(ITunes.self, from: data) {
-//                    print(appData)
-                    observer.onNext(appData)
+                    single(.success(appData))
                 } else {
                     print("응답은 왔으나 디코딩 실패")
-                    observer.onError(APIError.unknownResponse)
+                    single(.failure(APIError.unknownResponse))
                 }
                 
             }.resume()
             
-            
-            
             return Disposables.create()
-        }
+        }.debug("Observable iTunes")
     }
 }

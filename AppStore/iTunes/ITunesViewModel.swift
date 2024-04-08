@@ -13,7 +13,7 @@ import RxCocoa
 class ITunesViewModel {
     
     let disposeBag = DisposeBag()
-    
+
     struct Input {
         //검색 버튼 클릭
         let searchButtonClicked: ControlEvent<Void>
@@ -26,19 +26,26 @@ class ITunesViewModel {
     struct Output {
         let result: PublishSubject<[ITunesResult]>
         let selectedApp: PublishSubject<ITunesResult>
+        let toastMessage: PublishSubject<Void>
     }
     
     func transform(input: Input) -> Output {
         
         let iTunesList = PublishSubject<[ITunesResult]>()
         let selectedApp = PublishSubject<ITunesResult>()
+        let toastMessage = PublishSubject<Void>()
         
         input.searchButtonClicked
             .withLatestFrom(input.searchText.orEmpty)
             .distinctUntilChanged()
             .flatMap {
                 ITunesAPI.fetchITunesData(title: $0)
+                    .catch { error in
+                        toastMessage.onNext(())
+                        return Single<ITunes>.never()
+                    }
             }
+            .debug("flatMap")
             .subscribe(with: self, onNext: { owner, value in
                 print("Transfrom Next")
                 let result = value.results
@@ -58,7 +65,7 @@ class ITunesViewModel {
             }
             .disposed(by: disposeBag)
         
-        return Output(result: iTunesList, selectedApp: selectedApp)
+        return Output(result: iTunesList, selectedApp: selectedApp, toastMessage: toastMessage)
     }
     
 }

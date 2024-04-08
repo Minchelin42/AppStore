@@ -10,6 +10,7 @@ import SnapKit
 import RxSwift
 import RxCocoa
 import Kingfisher
+import Toast
 
 final class ITunesViewController: UIViewController {
 
@@ -67,24 +68,33 @@ final class ITunesViewController: UIViewController {
             .bind(to: tableView.rx.items(
                     cellIdentifier: ITunesTableViewCell.identifier,
                     cellType: ITunesTableViewCell.self)
-            ) { [weak self] (row, element, cell) in
-                guard let self = self else { return }
+            ) {(row, element, cell) in
                 cell.appName.text = element.trackName
                 cell.appIcon.kf.setImage(with: URL(string: element.artworkUrl512))
                 cell.scoreLabel.text = String(format: "%.1f", element.averageUserRating)
                 cell.devLabel.text = element.sellerName
                 cell.cateLabel.text = element.genres[0]
-                cell.preView1.kf.setImage(with: URL(string: element.screenshotUrls[0]))
-                cell.preView2.kf.setImage(with: URL(string: element.screenshotUrls[1]))
-                cell.preView3.kf.setImage(with: URL(string: element.screenshotUrls[2]))
+                cell.preView1.kf.setImage(with: URL(string: element.screenshotUrls[0]), placeholder: UIImage(systemName: "suit.heart"))
+                cell.preView2.kf.setImage(with: URL(string: element.screenshotUrls[1]), placeholder: UIImage(systemName: "suit.heart"))
+                cell.preView3.kf.setImage(with: URL(string: element.screenshotUrls[2]), placeholder: UIImage(systemName: "suit.heart"))
                 
                 cell.downloadButton.rx.tap
                     .subscribe(onNext: { _ in
                         //Realm에 저장해야함
                     })
                     .disposed(by: cell.disposeBag)
-                
-                self.view.endEditing(true)
+            }
+            .disposed(by: disposeBag)
+        
+        output.toastMessage
+            .bind(with: self) { owner, _ in
+                var style = ToastStyle()
+                style.messageColor = .white
+                style.backgroundColor = .darkGray
+                style.messageFont = .systemFont(ofSize: 14, weight: .semibold)
+                DispatchQueue.main.async {
+                    owner.view.makeToast("네트워크 오류입니다", duration: 1.0, position: .bottom, style: style)
+                }
             }
             .disposed(by: disposeBag)
         
