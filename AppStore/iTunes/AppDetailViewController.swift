@@ -74,39 +74,60 @@ final class AppDetailViewController: UIViewController {
     
     var selectedApp: ITunesResult? = nil
     
+    let scrollView = UIScrollView()
+    let contentView = UIView()
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         view.backgroundColor = .white
-        
         navigationController?.navigationBar.prefersLargeTitles = false
+        
+        scrollView.bounces = false
         
         configureHierarchy()
         configureLayout()
+        configureContentView()
         bind()
     }
     
     private func configureHierarchy() {
-        view.addSubview(appIcon)
-        view.addSubview(appName)
-        view.addSubview(devLabel)
-        view.addSubview(downloadButton)
-        view.addSubview(newsLabel)
-        view.addSubview(versionLabel)
-        view.addSubview(updateLabel)
-        view.addSubview(detailLabel)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
     }
     
     private func configureLayout() {
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        contentView.snp.makeConstraints { make in
+            make.top.equalTo(scrollView.snp.top)
+            make.bottom.equalTo(scrollView.snp.bottom)
+            make.width.equalTo(scrollView.snp.width)
+        }
+    }
+    
+    private func configureContentView() {
+        
+        contentView.addSubview(appIcon)
+        contentView.addSubview(appName)
+        contentView.addSubview(devLabel)
+        contentView.addSubview(downloadButton)
+        contentView.addSubview(newsLabel)
+        contentView.addSubview(versionLabel)
+        contentView.addSubview(updateLabel)
+        contentView.addSubview(detailLabel)
+        
         appIcon.snp.makeConstraints { make in
-            make.top.leading.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.top.leading.equalTo(contentView).inset(10)
             make.size.equalTo(85)
         }
         
         appName.snp.makeConstraints { make in
             make.top.equalTo(appIcon.snp.top).inset(10)
-            make.trailing.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.trailing.equalTo(contentView).inset(10)
             make.leading.equalTo(appIcon.snp.trailing).offset(10)
             make.height.equalTo(20)
         }
@@ -114,7 +135,7 @@ final class AppDetailViewController: UIViewController {
         devLabel.snp.makeConstraints { make in
             make.leading.equalTo(appName.snp.leading)
             make.top.equalTo(appName.snp.bottom).offset(8)
-            make.trailing.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.trailing.equalTo(contentView).inset(10)
             make.height.equalTo(10)
         }
         
@@ -141,14 +162,14 @@ final class AppDetailViewController: UIViewController {
         
         updateLabel.snp.makeConstraints { make in
             make.top.equalTo(versionLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).inset(14)
+            make.horizontalEdges.equalTo(contentView).inset(14)
             make.height.greaterThanOrEqualTo(50)
         }
         
         detailLabel.snp.makeConstraints { make in
             make.top.equalTo(updateLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).inset(14)
-            make.height.greaterThanOrEqualTo(50)
+            make.horizontalEdges.equalTo(contentView).inset(14)
+            make.bottom.equalTo(contentView).inset(10)
         }
     }
     
@@ -179,3 +200,4 @@ final class AppDetailViewController: UIViewController {
     }
     
 }
+
